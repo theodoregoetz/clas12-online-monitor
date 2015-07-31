@@ -1,13 +1,14 @@
 import numpy as np
 from matplotlib import pyplot, cm, colors, colorbar
 
-from clas12monitor.util import cached_property
-from clas12monitor.ui import QtGui, FigureCanvas, Figure, \
+from clas12monitor.util import cached_property, flame
+from clas12monitor.ui import QtCore, QtGui, FigureCanvas, Figure, \
     NavigationToolbar
 
 class DCWireStack(QtGui.QStackedWidget):
     def __init__(self, parent=None):
         super(DCWireStack,self).__init__(parent)
+        self.components = None
 
         self.wiremap = DCWirePlot(self)
         self.addWidget(self.wiremap)
@@ -16,6 +17,10 @@ class DCWireStack(QtGui.QStackedWidget):
         for sec in range(6):
             self.sec_wiremaps.append(DCWireSectorPlot(sec,self))
             self.addWidget(self.sec_wiremaps[sec])
+
+    def setCurrentIndex(self,*args,**kwargs):
+        super(DCWireStack,self).setCurrentIndex(*args,**kwargs)
+        self.update_active_plot()
 
     @property
     def data(self):
@@ -42,14 +47,11 @@ class DCWireStack(QtGui.QStackedWidget):
     def update_active_plot(self):
         if super(DCWireStack,self).currentIndex() == 0:
             self.wiremap.update()
+            self.wiremap.canvas.setFocus()
         else:
             sec = super(DCWireStack,self).currentIndex() - 1
             self.sec_wiremaps[sec].update()
-
-    def setCurrentIndex(self,*args,**kwargs):
-        super(DCWireStack,self).setCurrentIndex(*args,**kwargs)
-        self.update_active_plot()
-
+            self.sec_wiremaps[sec].canvas.setFocus()
 
 class DCWirePlot(QtGui.QWidget):
 
@@ -59,6 +61,9 @@ class DCWirePlot(QtGui.QWidget):
 
         self.fig = Figure((5.0, 4.0), dpi=100)
         self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self)
+        self.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.canvas.setFocus()
         self.toolbar = NavigationToolbar(self.canvas, self.parent)
 
         self.vbox = QtGui.QVBoxLayout(self)
@@ -66,6 +71,9 @@ class DCWirePlot(QtGui.QWidget):
         self.vbox.addWidget(self.toolbar)
 
         self.setup_axes()
+        self.setup_textbox()
+
+        self.canvas.mpl_connect('motion_notify_event', self.mouse_move)
 
     def _transform_data(self,data):
         a = data.copy().reshape(6,6*6,112)
@@ -77,6 +85,12 @@ class DCWirePlot(QtGui.QWidget):
         a = np.roll(a,6*6,axis=0)
         return a
 
+    def clear(self):
+        try:
+            del self.masked_data
+        except AttributeError:
+            pass
+
     @property
     def data(self):
         try:
@@ -87,7 +101,7 @@ class DCWirePlot(QtGui.QWidget):
 
     @data.setter
     def data(self,data):
-        delattr(self,'masked_data')
+        self.clear()
         self._data = self._transform_data(data)
         self.update()
 
@@ -101,7 +115,7 @@ class DCWirePlot(QtGui.QWidget):
 
     @mask.setter
     def mask(self,mask):
-        delattr(self,'masked_data')
+        self.clear()
         self._mask = self._transform_data(mask)
         self.update()
 
@@ -121,6 +135,7 @@ class DCWirePlot(QtGui.QWidget):
         self.im = self.ax.imshow(np.zeros((2*6*6,3*112)),
             extent=[0,112*3,-6*6,6*6],
             vmin=0, vmax=1,
+            cmap=flame,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
 
@@ -129,7 +144,7 @@ class DCWirePlot(QtGui.QWidget):
 
         yticks = np.linspace(-36,36,2*6+1,dtype=int)
         ylabels = abs(yticks)
-        yl[len(yl)//2] = 1
+        ylabels[len(ylabels)//2] = 1
 
         _=self.ax.yaxis.set_ticks(list(yticks))
         _=self.ax.yaxis.set_ticklabels([str(x) for x in ylabels])
@@ -141,6 +156,54 @@ class DCWirePlot(QtGui.QWidget):
 
         self.cb = self.ax.figure.colorbar(self.im, ax=self.ax)
 
+    def setup_textbox(self):
+        # text location in fig coords
+        self.txt = self.fig.text( 0.98, 0.98, '',
+            ha = 'right',
+            va = 'top',
+            bbox = dict(alpha=0.6, color='white'),
+            transform=self.fig.transFigure,
+            family='monospace',
+            zorder=100)
+        self.msg = '''\
+Sec: {sec: >1}, Slyr: {slyr: >1}, Lyr: {lyr: >1}, Wire: {wire: >3}
+Crate: {crate: >1}, Slot: {slot: >2}, Subslot: {subslot: >1}, Channel: {ch: >2}
+Distr Board: {dboard: <8}, Quad: {quad: >1}, Doublet: {doublet: >1}
+Trans Board: {tboard: >1}, Trans Board Half: {tboard_half: >1}'''
+
+    def mouse_move(self, event):
+        if not event.inaxes: return
+        if self.parent.components is None: return
+
+        x, y = int(event.xdata),abs(int(event.ydata))
+
+        if (x < 0) or (112*3 <= x) or (y < 0) or (6*6 <= y):
+            return
+
+        comp = self.parent.components
+
+        wire = x%112
+        lyr = y%6
+        slyr = y//6
+        sec = (x//112) + (3 if event.ydata<0 else 0)
+
+        point = (sec,slyr,lyr,wire)
+
+        msgopts = dict(
+            sec=sec+1,slyr=slyr+1,lyr=lyr+1,wire=wire+1,
+            crate       = comp.crate_id[point]+1,
+            slot        = comp.slot_id[point]+1,
+            subslot     = comp.subslot_id[point]+1,
+            ch          = comp.subslot_channel_id[point]+1,
+            dboard      = comp.distr_box_type[point],
+            quad        = comp.quad_id[point]+1,
+            doublet     = comp.doublet_id[point]+1,
+            tboard      = comp.trans_board_id[point]+1,
+            tboard_half = comp.trans_board_slot_id[point]+1,
+        )
+        self.txt.set_text(self.msg.format(**msgopts))
+        self.canvas.draw()
+
 class DCWireSectorPlot(QtGui.QWidget):
 
     def __init__(self,sec,parent=None):
@@ -150,6 +213,9 @@ class DCWireSectorPlot(QtGui.QWidget):
 
         self.fig = Figure((5.0, 4.0), dpi=100)
         self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self)
+        self.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.canvas.setFocus()
         self.toolbar = NavigationToolbar(self.canvas, self.parent)
 
         self.vbox = QtGui.QVBoxLayout(self)
@@ -157,9 +223,18 @@ class DCWireSectorPlot(QtGui.QWidget):
         self.vbox.addWidget(self.toolbar)
 
         self.setup_axes()
+        self.setup_textbox()
+
+        self.canvas.mpl_connect('motion_notify_event', self.mouse_move)
 
     def _transform_data(self,data):
         return data.reshape(6*6,112)
+
+    def clear(self):
+        try:
+            del self.masked_data
+        except AttributeError:
+            pass
 
     @property
     def data(self):
@@ -171,7 +246,7 @@ class DCWireSectorPlot(QtGui.QWidget):
 
     @data.setter
     def data(self,data):
-        delattr(self,'masked_data')
+        self.clear()
         self._data = self._transform_data(data)
         self.update()
 
@@ -185,7 +260,7 @@ class DCWireSectorPlot(QtGui.QWidget):
 
     @mask.setter
     def mask(self,mask):
-        delattr(self,'masked_data')
+        self.clear()
         self._mask = self._transform_data(mask)
         self.update()
 
@@ -202,16 +277,82 @@ class DCWireSectorPlot(QtGui.QWidget):
     def setup_axes(self):
         self.ax = self.fig.add_subplot(1,1,1)
         self.im = self.ax.imshow(np.zeros((6*6,112)),
-            extent=[1,112,1,6*6],
+            extent=[0,112,0,6*6],
+            cmap=flame,
             vmin=0, vmax=1,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
+
+        xticks = list(np.linspace(0,112,112//16+1,dtype=int))
+        xlabels = [str(x) for x in xticks]
+        xlabels[0] = '1'
+
+        yticks = list(np.linspace(0,36,36//6+1,dtype=int))
+        ylabels = [str(x) for x in yticks]
+        ylabels[0] = '1'
+
+        self.ax.xaxis.set_ticks(xticks)
+        self.ax.xaxis.set_ticklabels(xlabels)
+        self.ax.yaxis.set_ticks(yticks)
+        self.ax.yaxis.set_ticklabels(ylabels)
+
         self.cb = self.ax.figure.colorbar(self.im, ax=self.ax)
+
+    def setup_textbox(self):
+        # text location in fig coords
+        self.txt = self.fig.text( 0.98, 0.98, '',
+            ha = 'right',
+            va = 'top',
+            bbox = dict(alpha=0.6, color='white'),
+            transform=self.fig.transFigure,
+            family='monospace',
+            zorder=100)
+        self.msg = '''\
+Sec: {sec: >1}, Slyr: {slyr: >1}, Lyr: {lyr: >1}, Wire: {wire: >3}
+Crate: {crate: >1}, Slot: {slot: >2}, Subslot: {subslot: >1}, Channel: {ch: >2}
+Distr Board: {dboard: <8}, Quad: {quad: >1}, Doublet: {doublet: >1}
+Trans Board: {tboard: >1}, Trans Board Half: {tboard_half: >1}'''
+
+    def mouse_move(self, event):
+        if not event.inaxes:
+            return
+        if self.parent.components is None:
+            return
+
+        x, y = int(event.xdata),abs(int(event.ydata))
+
+        if (x < 0) or (112 <= x) or (y < 0) or (6*6 <= y):
+            return
+
+        comp = self.parent.components
+
+        wire = x%112
+        lyr = y%6
+        slyr = y//6
+        sec = self.sec
+
+        point = (sec,slyr,lyr,wire)
+
+        msgopts = dict(
+            sec=sec+1,slyr=slyr+1,lyr=lyr+1,wire=wire+1,
+            crate       = comp.crate_id[point]+1,
+            slot        = comp.slot_id[point]+1,
+            subslot     = comp.subslot_id[point]+1,
+            ch          = comp.subslot_channel_id[point]+1,
+            dboard      = comp.distr_box_type[point],
+            quad        = comp.quad_id[point]+1,
+            doublet     = comp.doublet_id[point]+1,
+            tboard      = comp.trans_board_id[point]+1,
+            tboard_half = comp.trans_board_slot_id[point]+1,
+        )
+        self.txt.set_text(self.msg.format(**msgopts))
+        self.canvas.draw()
 
 
 if __name__ == '__main__':
     import sys
     from numpy import random as rand
+    from clas12monitor.dc import dc_wire_occupancy, DCComponents
 
     class MainWindow(QtGui.QMainWindow):
         def __init__(self):
@@ -226,7 +367,11 @@ if __name__ == '__main__':
             cbox.setMaximum(6)
             cbox.setSpecialValueText('-')
             stack = DCWireStack()
-            stack.data = rand.uniform(0,100,(6,6,6,112))
+
+            stack.data = dc_wire_occupancy('exim1690.0001.recon')
+            stack.components = DCComponents()
+            stack.components.run = 1
+            stack.components.fetch_data()
 
             vbox.addWidget(cbox)
             vbox.addWidget(stack)

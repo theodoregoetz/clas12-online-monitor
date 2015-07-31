@@ -12,5 +12,5 @@ def initialize_session(engine_init = 'sqlite:///:memory:'):
     engine = create_engine(engine_init)
     Base.metadata.bind = engine
     session = sessionmaker(bind=engine)()
-    Base.metadata.creaate_all()
+    Base.metadata.create_all()
     return session

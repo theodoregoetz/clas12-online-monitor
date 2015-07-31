@@ -2,9 +2,9 @@ import sys
 from os import path
 import numpy as np
 
-from clas12monitor import cached_property, clas12db, localdb
-
-from . import tables
+from clas12monitor.database import clas12db, localdb
+from clas12monitor.util import cached_property
+from clas12monitor.dc import tables
 
 Crate            = tables.CalibDCHVCrate
 SupplyBoard      = tables.CalibDCHVSupplyBoard
@@ -19,7 +19,7 @@ ReadoutConnector = tables.CalibDCSignalReadoutConnector
 
 clas12db.rc.connstr = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 
-class DCWires(object):
+class DCComponents(object):
     _tables = [Crate            ,
                SupplyBoard      ,
                Subslot          ,
@@ -57,10 +57,9 @@ class DCWires(object):
 
     def fetch_data(self):
         self.clear()
-        for Table in DCWires._tables:
+        for Table in DCComponents._tables:
             name = Table.__tablename__
-            print('fetching table:',name)
-            data = ccdb.get_table(name,
+            data = clas12db.get_table(name,
                 run=self.run,
                 variation=self.variation)
             for d in data:

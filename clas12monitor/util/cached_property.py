@@ -15,8 +15,9 @@ class cached_property(object):
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
 
-    def __delete__(obj,attr):
-        try:
-            del obj.__dict__[attr]
-        except KeyError:
-            pass
+    #def __delete__(obj, attr):
+    #    print('del',attr)
+    #    try:
+    #        del obj.__dict__[attr]
+    #    except KeyError:
+    #        pass
