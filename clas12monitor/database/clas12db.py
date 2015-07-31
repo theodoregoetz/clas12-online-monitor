@@ -45,8 +45,6 @@ def list_tables(connstr = None):
     else:
         provider.connect(connstr)
 
-
-
 def get_table(table_path,
               run           = None,
               variation     = None,
@@ -162,7 +160,6 @@ def get_table(table_path,
     # return the numpy record array
     return data
 
-
 def add_table(data,
               table_path,
               runmin        = None,
@@ -200,7 +197,6 @@ def add_table(data,
         max_run = runmax,
         variation_name = variation,
         comment = comment)
-
 
 if __name__ == '__main__':
     ftof_stat = get_table('/calibration/ftof/status')

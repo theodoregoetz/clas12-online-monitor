@@ -350,6 +350,12 @@ Trans Board: {tboard: >1}, Trans Board Half: {tboard_half: >1}'''
 
 
 if __name__ == '__main__':
+    '''
+    to run this, issue the following command:
+
+        python3 -m clas12monitor.dc.plots
+    '''
+
     import sys
     from numpy import random as rand
     from clas12monitor.dc import dc_wire_occupancy, DCComponents

@@ -261,6 +261,12 @@ class DCComponents(object):
 
 
 if __name__ == '__main__':
+    '''
+    to run this, issue the following command:
+
+        python3 -m clas12monitor.dc.components
+    '''
+
     from matplotlib import pyplot, cm
     from clas12_wiremap import plot_wiremap
 
