@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot, cm, colors, colorbar
 
-from clas12monitor.util import cached_property, flame
-from clas12monitor.ui import QtCore, QtGui, FigureCanvas, Figure, \
+from clas12_wiremap.cached_property import cached_property
+from clas12_wiremap.ui import QtCore, QtGui, FigureCanvas, Figure, \
     NavigationToolbar
 
 class DCWireStack(QtGui.QStackedWidget):
@@ -135,7 +135,6 @@ class DCWirePlot(QtGui.QWidget):
         self.im = self.ax.imshow(np.zeros((2*6*6,3*112)),
             extent=[0,112*3,-6*6,6*6],
             vmin=0, vmax=1,
-            cmap=cm.jet,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
 
@@ -278,7 +277,6 @@ class DCWireSectorPlot(QtGui.QWidget):
         self.ax = self.fig.add_subplot(1,1,1)
         self.im = self.ax.imshow(np.zeros((6*6,112)),
             extent=[0,112,0,6*6],
-            cmap=flame,
             vmin=0, vmax=1,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
