@@ -64,62 +64,68 @@ class TBTab(QtGui.QTabWidget):
         for sector_id,sector in enumerate(self.sectors):
 
             superlayers = self.superlayers[sector_id]
-            def _check_sector(_,target=sector,parents=superlayers):
-                is_checked = any([p.isChecked() for p in parents])
-                target.setChecked(is_checked)
+            def _sc(_,sector=sector,sls = superlayers):
+                chkd = any([b.isChecked() for b in sls])
+                sector.setChecked(chkd)
+                
 
             for superlayer_id,superlayer in enumerate(superlayers):
-                sector.clicked.connect(superlayer.setChecked)
-               
-                superlayer.clicked.connect(_check_sector)
+                sector.clicked.connect(superlayer.setChecked)               
+                superlayer.clicked.connect(_sc)
 
                 boards = self.boards[sector_id][superlayer_id]
-                def _check_superlayer(_,target=superlayer,parents=boards):
-                    is_checked = any([p.isChecked() for p in parents])
-                    target.setChecked(is_checked)
+                def _sl(_,superlayer=superlayer, bs=boards):
+                    chkd = any([p.isChecked() for p in bs])
+                    superlayer.setChecked(chkd)
 
                 for board_id,board in enumerate(boards):
-                    superlayer.clicked.connect(board.setChecked)
-                    sector.clicked.connect(board.setChecked)
+                    def _b(ckd, board=board):
+                        was_blocked = board.signalsBlocked()
+                        board.blockSignals(True)
+                        board.setChecked(ckd)
+                        board.blockSignals(was_blocked)
+                    superlayer.clicked.connect(_b)
+                    sector.clicked.connect(_b)
+                    board.clicked.connect(_sl)
+                    board.clicked.connect(_sc)
                     
-                    board.clicked.connect(_check_superlayer)
-                    board.clicked.connect(_check_sector)
-
                     slots = self.slots[sector_id][superlayer_id][board_id]
-                    def _check_board(_,target=board,parents=slots):
-                        is_checked = any([p.isChecked() for p in parents])
-                        target.setChecked(is_checked)
+                    def _b(_,board=board, sls = slots):
+                        chkd = any([c.isChecked() for c in sls])
+                        was_blocked = board.signalsBlocked()
+                        board.blockSignals(True)
+                        board.setChecked(chkd)
+                        board.blockSignals(was_blocked)
+                        
+                    for slot_id, slot in enumerate(slots):
+                        def _s(ckd, slot=slot):
+                            was_blocked = slot.signalBlocked()
+                            slot.blockSignals(True)
+                            slot.setChecked(ckd)
+                            slot.blockSignals(was_blocked)
+                        board.clicked.connect(_s)
+                        superlayer.clicked.connect(_s)
+                        sector.clicked.connect(_s)
+                        slot.clicked.connect(_b)
+                        slot.clicked.connect(_sl)
+                        slot.clicked.connect(_sc)                        
 
-                    for slot in slots:
-                        board.clicked.connect(slot.setChecked)
-                        superlayer.clicked.connect(slot.setChecked)
-                        sector.clicked.connect(slot.setChecked)
-                        
-                        slot.clicked.connect(_check_board)
-                        slot.clicked.connect(_check_superlayer)
-                        slot.clicked.connect(_check_sector)
-                        
+                                            
         for sector_id,sector in enumerate(self.sectors):
-
-            superlayers = self.superlayers[sector_id]
-            
+            sector.clicked.connect(self.sendTBArray)
+            superlayers = self.superlayers[sector_id]            
 
             for superlayer_id,superlayer in enumerate(superlayers):                
-                sector.clicked.connect(self.sendTBArray)                
+                superlayer.clicked.connect(self.sendTBArray)                
                 boards = self.boards[sector_id][superlayer_id]       
 
                 for board_id,board in enumerate(boards):                    
-                    superlayer.clicked.connect(self.sendTBArray)
-                    sector.clicked.connect(self.sendTBArray)                    
+                    board.clicked.connect(self.sendTBArray)                   
                     slots = self.slots[sector_id][superlayer_id][board_id]               
 
-                    for slot in slots:
-                        
-                        board.clicked.connect(self.sendTBArray)
-                        superlayer.clicked.connect(self.sendTBArray)
-                        sector.clicked.connect(self.sendTBArray)
+                    for slot_id, slot in enumerate(slots):
                         slot.clicked.connect(self.sendTBArray)
-                    
+                        
    
         self.currentChanged.connect(self.sendTBArray)
    
@@ -220,34 +226,22 @@ class TBTab(QtGui.QTabWidget):
         sector_status         = self.get_sectors()[sector_id]
         super_layer_status   = self.get_superlayers()[sector_id]
         board_status         = self.get_boards()[sector_id]
-        half_status          = self.get_halfs()[sector_id]
+        slot_status          = self.get_halfs()[sector_id]
         
         print('\n\nsector id:',sector_id)
         print('supply boards:',board_status)
 
         mask = np.zeros((6,6,6,112), dtype=np.bool)
         if sector_status:
-            for sl_i,sl in enumerate(super_layer_status):
-                if sl:
-                    for b_i,b in enumerate(board_status[sl_i]):
-                        if b:
-                            for h_i,h in enumerate(half_status[sl_i][b_i]):
-                                if h:
+            for superlayer_i,superlayer in enumerate(super_layer_status):
+                if superlayer:
+                    for b_i,board in enumerate(board_status[sl_i]):
+                        if board:
+                            for h_i,slot in enumerate(slot_status[sl_i][b_i]):
+                                if slot:
                                     mask |= (dcw.trans_board_id==b_i) \
                                         & (dcw.trans_board_slot_id==h_i)
-        if crate_status:
-            for sb_i,sb in enumerate(supply_board_status):
-                if sb:
-                    for ss_i,ss in enumerate(subslot_status[sb_i]):
-                        if ss:
-                            for ch_i,ch in enumerate(channel_status[sb_i][ss_i]):
-                                if ch:
-                                    mask |= (dcw.crate_id==crate_id) \
-                                        & (dcw.slot_id==sb_i) \
-                                        & (dcw.subslot_id==ss_i) \
-                                        & (dcw.subslot_channel_id==ch_i)
-
-
+       
         wiremaps.mask = mask
         print('complete')
 
