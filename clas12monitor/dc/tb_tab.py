@@ -1,17 +1,19 @@
 from __future__ import print_function, division
 
+import numpy as np
+
 import os
 
 from clas12monitor.ui import QtGui, uic
 
-
 class TBTab(QtGui.QTabWidget):
     def __init__(self, parent=None):
         super(QtGui.QTabWidget, self).__init__(parent)
+        self.parent = parent 
         curdir = os.path.dirname(os.path.realpath(__file__))
         uic.loadUi(os.path.join(curdir,'TBTab.ui'), self)
         self.init_buttons()
-
+ 
     def init_buttons(self):
 
         sector_fmt     = 'sc{sector}'
@@ -24,8 +26,7 @@ class TBTab(QtGui.QTabWidget):
         self.boards = []
         self.slots = []
 
-        for sector_id in range(1,7):
-        
+        for sector_id in range(1,7):        
             fmt = dict(sector=sector_id)
 
             self.sectors.append(getattr(self,sector_fmt.format(**fmt)))
@@ -69,7 +70,7 @@ class TBTab(QtGui.QTabWidget):
 
             for superlayer_id,superlayer in enumerate(superlayers):
                 sector.clicked.connect(superlayer.setChecked)
-                sector.clicked.connect(self.stateChanged)
+               
                 superlayer.clicked.connect(_check_sector)
 
                 boards = self.boards[sector_id][superlayer_id]
@@ -80,8 +81,7 @@ class TBTab(QtGui.QTabWidget):
                 for board_id,board in enumerate(boards):
                     superlayer.clicked.connect(board.setChecked)
                     sector.clicked.connect(board.setChecked)
-                    superlayer.clicked.connect(self.stateChanged)
-                    sector.clicked.connect(self.stateChanged)
+                    
                     board.clicked.connect(_check_superlayer)
                     board.clicked.connect(_check_sector)
 
@@ -94,21 +94,34 @@ class TBTab(QtGui.QTabWidget):
                         board.clicked.connect(slot.setChecked)
                         superlayer.clicked.connect(slot.setChecked)
                         sector.clicked.connect(slot.setChecked)
+                        
                         slot.clicked.connect(_check_board)
                         slot.clicked.connect(_check_superlayer)
                         slot.clicked.connect(_check_sector)
-                        '''
-                        board.clicked.connect(self.status_changed)
-                        superlayer.clicked.connect(self.status_changed)
-                        sector.clicked.connect(self.status_changed)
-                        slot.clicked.connect(self.status_changed)
-                        '''
-                        board.clicked.connect(self.stateChanged)
-                        superlayer.clicked.connect(self.stateChanged)
-                        sector.clicked.connect(self.stateChanged)
-                        slot.clicked.connect(self.stateChanged)
+                        
+        for sector_id,sector in enumerate(self.sectors):
+
+            superlayers = self.superlayers[sector_id]
+            
+
+            for superlayer_id,superlayer in enumerate(superlayers):                
+                sector.clicked.connect(self.sendTBArray)                
+                boards = self.boards[sector_id][superlayer_id]       
+
+                for board_id,board in enumerate(boards):                    
+                    superlayer.clicked.connect(self.sendTBArray)
+                    sector.clicked.connect(self.sendTBArray)                    
+                    slots = self.slots[sector_id][superlayer_id][board_id]               
+
+                    for slot in slots:
+                        
+                        board.clicked.connect(self.sendTBArray)
+                        superlayer.clicked.connect(self.sendTBArray)
+                        sector.clicked.connect(self.sendTBArray)
+                        slot.clicked.connect(self.sendTBArray)
                     
    
+        self.currentChanged.connect(self.sendTBArray)
    
     def get_sectors(self):
 
@@ -198,10 +211,45 @@ class TBTab(QtGui.QTabWidget):
         
     
 
-    def status_changed(self):
+    def sendTBArray(self,*args):
+        main_window = self.parent
+        dcw = main_window.dcwires
+        wiremaps = main_window.wiremaps
 
-        buttons = self.get_superlayers()
-        print(buttons)
+        sector_id            = self.currentIndex()
+        sector_status         = self.get_sectors()[sector_id]
+        super_layer_status   = self.get_superlayers()[sector_id]
+        board_status         = self.get_boards()[sector_id]
+        half_status          = self.get_halfs()[sector_id]
+        
+        print('\n\nsector id:',sector_id)
+        print('supply boards:',board_status)
+
+        mask = np.zeros((6,6,6,112), dtype=np.bool)
+        if sector_status:
+            for sl_i,sl in enumerate(super_layer_status):
+                if sl:
+                    for b_i,b in enumerate(board_status[sl_i]):
+                        if b:
+                            for h_i,h in enumerate(half_status[sl_i][b_i]):
+                                if h:
+                                    mask |= (dcw.trans_board_id==b_i) \
+                                        & (dcw.trans_board_slot_id==h_i)
+        if crate_status:
+            for sb_i,sb in enumerate(supply_board_status):
+                if sb:
+                    for ss_i,ss in enumerate(subslot_status[sb_i]):
+                        if ss:
+                            for ch_i,ch in enumerate(channel_status[sb_i][ss_i]):
+                                if ch:
+                                    mask |= (dcw.crate_id==crate_id) \
+                                        & (dcw.slot_id==sb_i) \
+                                        & (dcw.subslot_id==ss_i) \
+                                        & (dcw.subslot_channel_id==ch_i)
+
+
+        wiremaps.mask = mask
+        print('complete')
 
 if __name__ == '__main__':
     import sys
