@@ -31,7 +31,7 @@ class MainWindow(QtGui.QMainWindow):
         self.explorer_tabs = QtGui.QTabWidget()
 
 
-        TBTab.stateChanged = self.sendTBArray
+        
         DBTab.stateChanged = self.sendDBArray
         STBTab.stateChanged = self.sendSTBArray
         DCRB.stateChanged = self.sendDCRBArray
@@ -49,7 +49,7 @@ class MainWindow(QtGui.QMainWindow):
         self.explorer_tabs.addTab(self.dboard, 'Distribution Boards')
 
 
-        self.tboard = TBTab()
+        self.tboard = TBTab(self)
         self.tboard.setMinimumWidth(750)
         tboard_vbox = QtGui.QVBoxLayout(self.tboard)
         self.explorer_tabs.addTab(self.tboard, 'Translation Boards')
@@ -131,12 +131,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dcwires.fetch_data()
 
 
-    def sendTBArray(*args):
-        return main_window.tboard.get_sectors(),
-        main_window.tboard.get_superlayers(),
-        main_window.tboard.get_boards(),
-        main_window.tboard.get_halfs()
-
+    
     def sendDBArray(*args):
         return main_window.dboard.get_sector(),
         main_window.dboard.get_super_layer(),
