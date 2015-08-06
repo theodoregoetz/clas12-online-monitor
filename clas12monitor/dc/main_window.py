@@ -28,22 +28,16 @@ class MainWindow(QtGui.QMainWindow):
 
 
         ### Explorer Tabs
-        self.explorer_tabs = QtGui.QTabWidget()
-
-
-        
-        DBTab.stateChanged = self.sendDBArray
-        STBTab.stateChanged = self.sendSTBArray
-        DCRB.stateChanged = self.sendDCRBArray
+        self.explorer_tabs = QtGui.QTabWidget()       
 
         self.crate = CrateTab(self)
         self.crate.setMinimumWidth(750)
         self.crate.setMaximumHeight(1000)
         crate_vbox = QtGui.QVBoxLayout(self.crate)
         self.explorer_tabs.addTab(self.crate, 'Crates')
+    
 
-
-        self.dboard = DBTab()
+        self.dboard = DBTab(self)
         self.dboard.setMinimumWidth(750)
         dboard_vbox = QtGui.QVBoxLayout(self.dboard)
         self.explorer_tabs.addTab(self.dboard, 'Distribution Boards')
@@ -54,12 +48,12 @@ class MainWindow(QtGui.QMainWindow):
         tboard_vbox = QtGui.QVBoxLayout(self.tboard)
         self.explorer_tabs.addTab(self.tboard, 'Translation Boards')
 
-        self.dcrb = DCRB()
+        self.dcrb = DCRB(self)
         self.dcrb.setMinimumWidth(750)
         dcrb_vbox = QtGui.QVBoxLayout(self.dcrb)
         self.explorer_tabs.addTab(self.dcrb, 'Drift Chamber Readout Board')
 
-        self.stb = STBTab()
+        self.stb = STBTab(self)
         self.stb.setMinimumWidth(750)
         stb_vbox = QtGui.QVBoxLayout(self.stb)
         self.explorer_tabs.addTab(self.stb, 'Signal Translation Board')
@@ -73,6 +67,23 @@ class MainWindow(QtGui.QMainWindow):
         explorer_vbox = QtGui.QVBoxLayout()
         explorer_vbox.addWidget(self.explorer_tabs)
         self.explorer_holder.setLayout(explorer_vbox)
+        
+        
+        
+        def changeViewTab():
+            if self.explorer_tabs.currentIndex() == 0:
+                self.crate.sendCrateArray()
+            if self.explorer_tabs.currentIndex() == 1:
+                self.dboard.sendDBArray()
+            if self.explorer_tabs.currentIndex() == 2:
+                self.tboard.sendTBArray()
+            if self.explorer_tabs.currentIndex() == 3:
+                self.dcrb.sendDCRBArray()
+            if self.explorer_tabs.currentIndex() == 4:
+                self.stb.sendSTBArray()
+    
+            
+        self.explorer_tabs.currentChanged.connect(changeViewTab)
 
         ### Chooser Sidebar
         #self.sidebar = Sidebar(self.session)
@@ -114,7 +125,8 @@ class MainWindow(QtGui.QMainWindow):
         self.actionExplorer.setChecked(True)
         self.actionChooser.setChecked(False)
         self.left_stacked_widget.setCurrentIndex(0)
-
+        self.crate.sendCrateArray()
+        
     def setModeChooser(self):
         self.actionExplorer.setChecked(False)
         self.actionChooser.setChecked(True)
@@ -130,25 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dcwires.run = runnumber
         self.dcwires.fetch_data()
 
-
     
-    def sendDBArray(*args):
-        return main_window.dboard.get_sector(),
-        main_window.dboard.get_super_layer(),
-        main_window.dboard.get_direction(),
-        main_window.dboard.get_box(),
-        main_window.dboard.get_quad(),
-        main_window.dboard.get_doublet()
-
-    def sendSTBArray(*args):
-        return main_window.stb.get_board(),
-        main_window.stb.get_superlayer(),
-        main_window.stb.get_sector()
-
-    def sendDCRBArray(*args):
-        print(main_window.dcrb.get_board())
-        print(main_window.dcrb.get_superlayer())
-        print(main_window.dcrb.get_sector())
 
 if __name__ == '__main__':
     import sys
