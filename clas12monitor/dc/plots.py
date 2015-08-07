@@ -136,7 +136,7 @@ class DCWirePlot(QtGui.QWidget):
         self.im = self.ax.imshow(np.zeros((2*6*6,3*112)),
             extent=[0,112*3,-6*6,6*6],
             vmin=0, vmax=1,
-            cmap=cm.jet,
+            cmap=flame,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
 
@@ -283,7 +283,7 @@ class DCWireSectorPlot(QtGui.QWidget):
         self.ax = self.fig.add_subplot(1,1,1)
         self.im = self.ax.imshow(np.zeros((6*6,112)),
             extent=[0,112,0,6*6],
-            cmap=cm.jet,
+            cmap=flame,
             vmin=0, vmax=1,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)

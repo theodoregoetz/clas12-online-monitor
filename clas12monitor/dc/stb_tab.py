@@ -11,7 +11,7 @@ class STBTab(QtGui.QTabWidget):
         super(QtGui.QTabWidget, self).__init__(parent)
         self.parent =  parent
         curdir = os.path.dirname(os.path.realpath(__file__))
-        uic.loadUi(os.path.join(curdir,'STBTab.ui'), self)
+        uic.loadUi(os.path.join(curdir,'ui','STBTab.ui'), self)
         self.init_buttons()
 
     def init_buttons(self):

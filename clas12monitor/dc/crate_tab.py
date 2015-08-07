@@ -11,7 +11,7 @@ class CrateTab(QtGui.QTabWidget):
         super(QtGui.QTabWidget, self).__init__(parent)
         self.parent = parent
         curdir = os.path.dirname(os.path.realpath(__file__))
-        uic.loadUi(os.path.join(curdir,'CrateTab.ui'), self)
+        uic.loadUi(os.path.join(curdir,'ui','CrateTab.ui'), self)
         self.init_buttons()
 
     def init_buttons(self):
@@ -63,7 +63,7 @@ class CrateTab(QtGui.QTabWidget):
                         self.channels[-1][-1][-1].append(getattr(self,ch_fmt.format(**fmt)))
 
         for ct_id,ct in enumerate(self.crates):
-            
+
             supply_boards = self.supply_boards[ct_id]
             def _ct(_,ct=ct,sbs=supply_boards):
                 chkd = any([b.isChecked() for b in sbs])
@@ -88,7 +88,7 @@ class CrateTab(QtGui.QTabWidget):
                     ct.clicked.connect(_ss)
                     ss.clicked.connect(_sb)
                     ss.clicked.connect(_ct)
-                    
+
 
                     channels = self.channels[ct_id][sb_id][ss_id]
                     def _ss(_,ss=ss,chs=channels):
@@ -111,30 +111,30 @@ class CrateTab(QtGui.QTabWidget):
                         ch.clicked.connect(_ss)
                         ch.clicked.connect(_sb)
                         ch.clicked.connect(_ct)
-                    
-                        
-        
+
+
+
 
         for ct_id,ct in enumerate(self.crates):
             ct.clicked.connect(self.sendCrateArray)
 
             supply_boards = self.supply_boards[ct_id]
-            
-            for sb_id,sb in enumerate(supply_boards):                
+
+            for sb_id,sb in enumerate(supply_boards):
                 sb.clicked.connect(self.sendCrateArray)
 
                 subslots = self.subslots[ct_id][sb_id]
-                
+
                 for ss_id,ss in enumerate(subslots):
-                   
+
                     ss.clicked.connect(self.sendCrateArray)
 
                     channels = self.channels[ct_id][sb_id][ss_id]
-                    
+
                     for ch_id,ch in enumerate(channels):
-                        
+
                         ch.clicked.connect(self.sendCrateArray)
-        
+
         self.currentChanged.connect(self.sendCrateArray)
 
     def get_crate(self):
@@ -259,7 +259,7 @@ class CrateTab(QtGui.QTabWidget):
         supply_board_status = self.get_supply_board()[crate_id]
         subslot_status      = self.get_subslots()[crate_id]
         channel_status      = self.get_channels()[crate_id]
-        
+
         print('\n\ncrate id:',crate_id)
         print('supply boards:',supply_board_status)
 

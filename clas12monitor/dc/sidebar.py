@@ -10,15 +10,13 @@ def pushd(newDir):
     yield
     os.chdir(previousDir)
 
-from clas12monitor.ui import QtGui, uic
-
-from clas12monitor.dc.fixedcheckbox import FixedCheckBox
+from clas12monitor.ui import QtGui, uic, FixedCheckBox
 
 class Sidebar(QtGui.QWidget):
     def __init__(self,session,parent=None):
         super(QtGui.QWidget, self).__init__(parent)
         curdir = os.path.dirname(os.path.realpath(__file__))
-        with pushd(curdir):
+        with pushd(os.path.join(curdir,'ui')):
             uic.loadUi('Sidebar.ui', self)
 
         self.session = session

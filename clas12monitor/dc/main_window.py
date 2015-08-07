@@ -3,17 +3,16 @@ from __future__ import print_function, division
 import sys
 import os
 import numpy as np
+
 from clas12monitor.ui import QtGui, uic
 from clas12monitor.dc import plots, DCComponents, dc_wire_occupancy
-
 from clas12monitor.dc import CrateTab, DBTab, TBTab, SetRunDialogue, DCRB, STBTab
-
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         curdir = os.path.dirname(os.path.realpath(__file__))
-        uic.loadUi(os.path.join(curdir,'MainWindow.ui'), self)
+        uic.loadUi(os.path.join(curdir,'ui','MainWindow.ui'), self)
         self.dcwires = DCComponents()
         self.loadRun(1)
         #self.dcwires.initialize_session()
