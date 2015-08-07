@@ -87,7 +87,7 @@
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_36">
               <property name="spacing">
-               <number>3</number>
+               <number>10</number>
               </property>
               <property name="leftMargin">
                <number>3</number>
@@ -96,7 +96,7 @@
                <number>3</number>
               </property>
               <property name="rightMargin">
-               <number>7</number>
+               <number>15</number>
               </property>
               <property name="bottomMargin">
                <number>3</number>
@@ -111,7 +111,7 @@
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>72</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
