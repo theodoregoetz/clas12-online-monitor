@@ -2,11 +2,14 @@ from __future__ import print_function, division
 
 import os
 
+import numpy as np
+
 from clas12monitor.ui import QtGui, uic
 
 class STBTab(QtGui.QTabWidget):
     def __init__(self, parent=None):
         super(QtGui.QTabWidget, self).__init__(parent)
+        self.parent =  parent
         curdir = os.path.dirname(os.path.realpath(__file__))
         uic.loadUi(os.path.join(curdir,'STBTab.ui'), self)
         self.init_buttons()
@@ -49,43 +52,45 @@ class STBTab(QtGui.QTabWidget):
         for sector_id,sector in enumerate(self.sectors):
 
             superlayers = self.superlayers[sector_id]
-            def _check_sector(_,target=sector,parents=superlayers):
-                is_checked = any([p.isChecked() for p in parents])
-                target.setChecked(is_checked)
+            def _sc(_,sector=sector,sls = superlayers):
+                chkd = any([p.isChecked() for p in sls])
+                sector.setChecked(chkd)
 
             for superlayer_id,superlayer in enumerate(superlayers):
                 sector.clicked.connect(superlayer.setChecked)
-                sector.clicked.connect(self.stateChanged)
-                superlayer.clicked.connect(_check_sector)
+                superlayer.clicked.connect(_sc)
 
                 boards = self.boards[sector_id][superlayer_id]
-                def _check_superlayer(_,target=superlayer,parents=boards):
-                    is_checked = any([p.isChecked() for p in parents])
-                    target.setChecked(is_checked)
+                def _sl(_,superlayer=superlayer,bs=boards):
+                    is_checked = any([p.isChecked() for p in bs])
+                    superlayer.setChecked(chkd)
 
                 for board_id,board in enumerate(boards):
-                    superlayer.clicked.connect(board.setChecked)
-                    superlayer.clicked.connect(self.stateChanged)
-                    sector.clicked.connect(board.setChecked)
-                    sector.clicked.connect(self.stateChanged)
-                    board.clicked.connect(_check_superlayer)
-                    board.clicked.connect(_check_sector)
-                    board.clicked.connect(self.stateChanged)
+                    def _b(ckd, board=board):
+                        was_blocked = board.signalsBlocked()
+                        board.blockSignals(True)
+                        board.setChecked(ckd)
+                        board.blockSignals(was_blocked)
+
+                    superlayer.clicked.connect(_b)
+                    sector.clicked.connect(_b)
+                    board.clicked.connect(_sl)
+                    board.clicked.connect(_sc)
+
+
+            for sector_id,sector in enumerate(self.sectors):
+                sector.clicked.connect(self.sendSTBArray)
+                superlayers = self.superlayers[sector_id]
+                for superlayer_id,superlayer in enumerate(superlayers):
+                    superlayer.clicked.connect(self.sendSTBArray)
+                    boards = self.boards[sector_id][superlayer_id]
+                    for board_id,board in enumerate(boards):
+                        board.clicked.connect(self.sendSTBArray)
+
+        self.currentChanged.connect(self.sendSTBArray)
 
     def get_sector(self):
-
-        fmt = 'sc{sector}'
-
-        buttons = []
-        for sector in range(1,7):
-
-            opts = {
-                        'sector' : sector
-                    }
-            b = getattr(self,fmt.format(**opts))
-            buttons += [b.isChecked()]
-
-        return buttons
+        return [i.isChecked() for i in self.sectors]
 
     def get_superlayer(self):
 
@@ -129,9 +134,31 @@ class STBTab(QtGui.QTabWidget):
 
         return buttons
 
-    def stateChanged(self):
-        raise NotImplemented('This needs to be implemented in MainWindow')
+    def sendSTBArray(self,*args):
+        main_window = self.parent
+        dcw = main_window.dcwires
+        wiremaps = main_window.wiremaps
 
+        sector_id            = self.currentIndex()
+        sector_status        = self.get_sector()[sector_id]
+        superlayer_status = self.get_superlayer()[sector_id]
+        board_status      = self.get_board()[sector_id]
+
+        print('\n\ncrate id:',sector_id)
+        print('supply boards:',superlayer_status)
+
+        mask = np.zeros((6,6,6,112), dtype=np.bool)
+        if sector_status:
+            for sl_i,sl in enumerate(superlayer_status):
+                if sl:
+                    for b_i,b in enumerate(board_status[sl_i]):
+                        if b:
+                            mask |= (dcw.sector_id==sector_id) \
+                                & (dcw.superlayer_id==sl_i) \
+                                #& (dcw.signal_cable_board_id==b_i)
+
+        wiremaps.mask = mask
+        print('complete')
 if __name__ == '__main__':
     import sys
 
@@ -141,7 +168,6 @@ if __name__ == '__main__':
 
             self.stb_tab = STBTab()
             self.setCentralWidget(self.stb_tab)
-            print(self.stb_tab.get_superlayer())
             self.show()
 
     app = QtGui.QApplication(sys.argv)

@@ -50,6 +50,7 @@ class DCWireStack(QtGui.QStackedWidget):
             self.wiremap.canvas.setFocus()
         else:
             sec = super(DCWireStack,self).currentIndex() - 1
+            print('updating sector plot',sec)
             self.sec_wiremaps[sec].update()
             self.sec_wiremaps[sec].canvas.setFocus()
 
@@ -269,16 +270,20 @@ class DCWireSectorPlot(QtGui.QWidget):
         return np.ma.array(self.data, mask=~self.mask)
 
     def update(self):
+        print('updating sector wiremap',self.sec)
+        print('    non-mask elements:',np.count_nonzero(self.mask))
+        print('    mask:',self.mask.shape,self.mask)
+        print('    data:',self.data.shape,self.data)
         self.im.set_data(self.masked_data)
-        self.im.set_clim(vmin=np.nanmin(self.masked_data),
-                         vmax=np.nanmax(self.masked_data))
+        self.im.set_clim(vmin=0,
+                         vmax=max(1,np.nanmax(self.masked_data)))
         self.canvas.draw()
 
     def setup_axes(self):
         self.ax = self.fig.add_subplot(1,1,1)
         self.im = self.ax.imshow(np.zeros((6*6,112)),
             extent=[0,112,0,6*6],
-            cmap=flame,
+            cmap=cm.jet,
             vmin=0, vmax=1,
             aspect='auto', origin='lower', interpolation='nearest')
         self.ax.grid(True)
@@ -295,6 +300,8 @@ class DCWireSectorPlot(QtGui.QWidget):
         self.ax.xaxis.set_ticklabels(xlabels)
         self.ax.yaxis.set_ticks(yticks)
         self.ax.yaxis.set_ticklabels(ylabels)
+
+        self.ax.set_title('Sector '+str(self.sec+1))
 
         self.cb = self.ax.figure.colorbar(self.im, ax=self.ax)
 

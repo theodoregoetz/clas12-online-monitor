@@ -16,6 +16,7 @@ TransBoard       = tables.CalibDCHVTranslationBoard
 Wire             = tables.CalibDCWire
 SignalCable      = tables.CalibDCSignalCable
 ReadoutConnector = tables.CalibDCSignalReadoutConnector
+SignalTransBoard = tables.CalibDCSignalTranslationBoard
 
 clas12db.rc.connstr = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 
@@ -109,6 +110,23 @@ class DCComponents(object):
     @cached_property
     def subslot_channel_id(self):
         return self.query_column(Doublet.channel_id)
+
+    @cached_property
+    def sector_id(self):
+        return self.query_column(Wire.sector)
+
+    @cached_property
+    def readout_board(self):
+        return self.query_column(ReadoutConnector.slot_id)
+
+
+    @cached_property
+    def superlayer_id(self):
+        return self.query_column(Wire.superlayer)
+
+    @cached_property
+    def signal_cable_board_id(self):
+        return self.query_column(SignalTransBoard.id)
 
     @cached_property
     def distr_box_type(self):

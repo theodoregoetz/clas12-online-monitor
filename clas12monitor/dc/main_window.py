@@ -4,7 +4,7 @@ import sys
 import os
 import numpy as np
 from clas12monitor.ui import QtGui, uic
-from clas12monitor.dc import plots, DCComponents, dc_wire_occupancy 
+from clas12monitor.dc import plots, DCComponents, dc_wire_occupancy
 
 from clas12monitor.dc import CrateTab, DBTab, TBTab, SetRunDialogue, DCRB, STBTab
 
@@ -28,14 +28,14 @@ class MainWindow(QtGui.QMainWindow):
 
 
         ### Explorer Tabs
-        self.explorer_tabs = QtGui.QTabWidget()       
+        self.explorer_tabs = QtGui.QTabWidget()
 
         self.crate = CrateTab(self)
         self.crate.setMinimumWidth(750)
         self.crate.setMaximumHeight(1000)
         crate_vbox = QtGui.QVBoxLayout(self.crate)
         self.explorer_tabs.addTab(self.crate, 'Crates')
-    
+
 
         self.dboard = DBTab(self)
         self.dboard.setMinimumWidth(750)
@@ -67,23 +67,7 @@ class MainWindow(QtGui.QMainWindow):
         explorer_vbox = QtGui.QVBoxLayout()
         explorer_vbox.addWidget(self.explorer_tabs)
         self.explorer_holder.setLayout(explorer_vbox)
-        
-        
-        
-        def changeViewTab():
-            if self.explorer_tabs.currentIndex() == 0:
-                self.crate.sendCrateArray()
-            if self.explorer_tabs.currentIndex() == 1:
-                self.dboard.sendDBArray()
-            if self.explorer_tabs.currentIndex() == 2:
-                self.tboard.sendTBArray()
-            if self.explorer_tabs.currentIndex() == 3:
-                self.dcrb.sendDCRBArray()
-            if self.explorer_tabs.currentIndex() == 4:
-                self.stb.sendSTBArray()
-    
-            
-        self.explorer_tabs.currentChanged.connect(changeViewTab)
+
 
         ### Chooser Sidebar
         #self.sidebar = Sidebar(self.session)
@@ -106,18 +90,34 @@ class MainWindow(QtGui.QMainWindow):
 
         #self.sidebar.post_update = update_wiremap
 
-        for i in [self.dboard, self.tboard, self.dcrb, self.stb]:
-            i.currentChanged.connect(lambda x: self.wiremaps.setCurrentIndex(x+1))
-
-
-
         def f(i):
+            print('explorer tab changed. index:',self.explorer_tabs.currentIndex())
+            print('    sub index:',self.explorer_tabs.currentWidget().currentIndex())
+
             if (i == 0):
                 self.wiremaps.setCurrentIndex(0)
             else:
                 self.wiremaps.setCurrentIndex(self.explorer_tabs.currentWidget().currentIndex() + 1)
 
         self.explorer_tabs.currentChanged.connect(f)
+
+
+        def changeViewTab():
+            if self.explorer_tabs.currentIndex() == 0:
+                self.crate.sendCrateArray()
+            if self.explorer_tabs.currentIndex() == 1:
+                self.dboard.sendDBArray()
+            if self.explorer_tabs.currentIndex() == 2:
+                self.tboard.sendTBArray()
+            if self.explorer_tabs.currentIndex() == 3:
+                self.dcrb.sendDCRBArray()
+            if self.explorer_tabs.currentIndex() == 4:
+                self.stb.sendSTBArray()
+
+
+        self.explorer_tabs.currentChanged.connect(changeViewTab)
+
+
         self.setModeExplorer()
         self.show()
 
@@ -126,7 +126,7 @@ class MainWindow(QtGui.QMainWindow):
         self.actionChooser.setChecked(False)
         self.left_stacked_widget.setCurrentIndex(0)
         self.crate.sendCrateArray()
-        
+
     def setModeChooser(self):
         self.actionExplorer.setChecked(False)
         self.actionChooser.setChecked(True)
@@ -142,7 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dcwires.run = runnumber
         self.dcwires.fetch_data()
 
-    
+
 
 if __name__ == '__main__':
     import sys
