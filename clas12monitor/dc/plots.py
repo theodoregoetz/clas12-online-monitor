@@ -18,8 +18,8 @@ class DCWireStack(QtGui.QStackedWidget):
             self.sec_wiremaps.append(DCWireSectorPlot(sec,self))
             self.addWidget(self.sec_wiremaps[sec])
 
-    def setCurrentIndex(self,*args,**kwargs):
-        super(DCWireStack,self).setCurrentIndex(*args,**kwargs)
+    def setCurrentIndex(self,sec):
+        super(DCWireStack,self).setCurrentIndex(sec)
         self.update_active_plot()
 
     @property

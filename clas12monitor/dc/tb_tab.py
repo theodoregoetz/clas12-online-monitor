@@ -16,7 +16,7 @@ class TBTab(QtGui.QTabWidget):
 
     def init_buttons(self):
 
-        self.currentChanged.connect(lambda sec: self.parent.wiremap.setCurrentIndex(sec+1))
+        self.currentChanged.connect(lambda sec: self.parent.wiremaps.setCurrentIndex(sec+1))
 
         sector_fmt     = 'sc{sector}'
         superlayer_fmt = 'sc{sector}_sl{superlayer}'
