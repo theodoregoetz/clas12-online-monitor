@@ -13,3 +13,4 @@ from matplotlib.backends.backend_qt4 import NavigationToolbar2QT \
     as NavigationToolbar
 
 from .main_window import MainWindow
+from .fixedcheckbox import FixedCheckBox

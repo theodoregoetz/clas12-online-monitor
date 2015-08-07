@@ -18,7 +18,7 @@ def generate_cmap_flame():
         ]
     flame = LinearSegmentedColormap.from_list('flame', clrs)
     #flame.set_bad(flame(0)) # set nan's and inf's to white
-    flame.set_bad(0.75) # set nan's and inf's to light gray
+    flame.set_bad('0.75') # set nan's and inf's to light gray
     return flame
 
 flame = generate_cmap_flame()

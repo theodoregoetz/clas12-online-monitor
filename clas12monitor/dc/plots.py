@@ -60,7 +60,7 @@ class DCWirePlot(QtGui.QWidget):
         super(DCWirePlot,self).__init__(parent)
         self.parent = parent
 
-        self.fig = Figure((5.0, 4.0), dpi=100)
+        self.fig = Figure((5.0, 4.0), dpi=100, facecolor='white')
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -126,8 +126,8 @@ class DCWirePlot(QtGui.QWidget):
 
     def update(self):
         self.im.set_data(self.masked_data)
-        self.im.set_clim(vmin=np.nanmin(self.masked_data),
-                         vmax=np.nanmax(self.masked_data))
+        self.im.set_clim(vmin=min(0,np.nanmin(self.masked_data)),
+                         vmax=max(1,np.nanmax(self.masked_data)))
         self.canvas.draw()
 
     def setup_axes(self):
@@ -212,7 +212,7 @@ class DCWireSectorPlot(QtGui.QWidget):
         self.parent = parent
         self.sec = sec
 
-        self.fig = Figure((5.0, 4.0), dpi=100)
+        self.fig = Figure((5.0, 4.0), dpi=100, facecolor='white')
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -275,7 +275,7 @@ class DCWireSectorPlot(QtGui.QWidget):
         print('    mask:',self.mask.shape,self.mask)
         print('    data:',self.data.shape,self.data)
         self.im.set_data(self.masked_data)
-        self.im.set_clim(vmin=0,
+        self.im.set_clim(vmin=min(0,np.nanmin(self.masked_data)),
                          vmax=max(1,np.nanmax(self.masked_data)))
         self.canvas.draw()
 
