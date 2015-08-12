@@ -1,6 +1,6 @@
 import os
 
-from clas12monitor.ui import QtGui
+from clas12monitor.ui import QtGui, uic
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):

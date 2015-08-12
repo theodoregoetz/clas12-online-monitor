@@ -1,49 +1,87 @@
 import re
+from datetime import datetime
 
 from clas12monitor.database.localdb import Column, Integer, Float, \
-    String, Enum, \
+    String, Enum, DateTime, \
     ForeignKey, ForeignKeyConstraint, UniqueConstraint, \
     relationship, Base
 
-class StatusDCHVCrate(Base):
-    __tablename__ = '/status/drift_chamber/high_voltage/crate'
+
+class TableBase(Base):
+    def __str__(self):
+        return self.str_fmt.format(**vars(self))
+    def __repr__(self):
+        return self.repr_fmt.format(**vars(self))
+
+class StatusTableBase(TableBase):
     id       = Column(Integer, primary_key=True)
-    crate_id = Column(Integer, nullable=False)
     begin    = Column(Integer, nullable=False)
     end      = Column(Integer, nullable=True)
     status   = Column(Integer, nullable=False)
-    author   = Column(Integer, nullable=False)
-    comment  = Column(String, nullable=False)
-    def __str__(self):
-        fmt = '[{id}/{crate_id},{begin}-{end}]({status})'
-        return fmt.format(**vars(self))
-    def __repr__(self):
-        fmt = 'StatusDCHVCrate(id={id},crate_id={crate_id},begin={begin},end={end},status={status},author={author},comment="{comment}")'
-        return fmt.format(**vars(self))
+    author   = Column(Integer, ForeignKey(Author.__tablename__+'.id'))
+    comment  = Column(Integer, ForeignKey(Comment.__tablename__+'.id'))
+    added    = Column(DateTime, default=datetime.utcnow)
 
-class StatusDCHVSupplyBoard(Base):
-    __tablename__ = '/status/drift_chamber/high_voltage/supply_board'
-    id        = Column(Integer, primary_key=True)
-    crate_id  = Column(Integer, ForeignKey(CalibDCHVCrate.__tablename__+'.id'))
-    slot_id   = Column(Integer, nullable=False)
-    wire_type = Column(Enum('sense','field','guard'))
-    doublet_connector = Column(Integer, nullable=False)
-    status    = Column(Integer, nullable=False)
-    subslots = relationship('CalibDCHVSubslot', backref='supply_board')
-    __table_args__ = (
-        UniqueConstraint(
-            'crate_id',
-            'slot_id'),)
-    def __str__(self):
-        fmt = '[{id}/{crate_id},{slot_id}]({wire_type},{doublet_connector},{status})'
-        return fmt.format(**vars(self))
-    def __repr__(self):
-        fmt = re.sub(r'\s+','','''\
-            CalibDCHVSupplyBoard(
+
+class Author(TableBase):
+    __tablename__ = 'Author'
+    id       = Column(Integer, primary_key=True)
+    name     = Column(String, nullable=False)
+    email    = Column(String, nullable=False)
+    str_fmt  = '[{id}]({name}, {email})'
+    repr_fmt = 'Author(id={id},name={name},email={email})'
+
+class Comment(TableBase):
+    __tablename__ = 'Comment'
+    id       = Column(Integer, primary_key=True)
+    message  = Column(String, nullable=False)
+    str_fmt  = '[{id}]({message})'
+    repr_fmt = 'Author(id={id},message="{message}")'
+
+
+class DCHVCrateStatus(StatusTableBase):
+    __tablename__ = 'DCHVCrateStatus'
+    crate_id = Column(Integer, nullable=False)
+    str_fmt  = '[{crate_id},{begin}-{end}]({status})'
+    repr_fmt = re.sub(r'\s+','','''
+            DCHVCrateStatus(
                 id={id},
                 crate_id={crate_id},
+                begin={begin},
+                end={end},
+                status={status},
+                author={author},
+                comment={comment},
+                added={added})''')
+
+class DCHVSupplyBoardStatus(StatusTableBase):
+    __tablename__ = 'DCHVSupplyBoardStatus'
+    supply_board_id = Column(Integer, nullable=False)
+    str_fmt  = '[{supply_board_id},{begin}-{end}]({status})'
+    repr_fmt = re.sub(r'\s+','','''
+            DCHVSupplyBoardStatus(
+                id={id},
+                supply_board_id={supply_board_id},
+                begin={begin},
+                end={end},
+                status={status},
+                author={author},
+                comment={comment},
+                added={added})''')
+
+class DCHVTranslationBoardStatus(StatusTableBase):
+    __tablename__ = 'DCHVTranslationBoardStatus'
+    board_id    = Column(Integer, nullable=False)
+    slot_id     = Column(Integer, nullable=False)
+    str_fmt  = '[{board_id},{slot_id},{begin}-{end}]({status})'
+    repr_fmt = re.sub(r'\s+','','''
+            DCHVSupplyBoardStatus(
+                id={id},
+                board_id={board_id},
                 slot_id={slot_id},
-                wire_type={wire_type},
-                doublet_connector={doublet_connector},
-                status={status})''')
-        return fmt.format(**vars(self))
+                begin={begin},
+                end={end},
+                status={status},
+                author={author},
+                comment={comment},
+                added={added})''')
