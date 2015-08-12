@@ -1,14 +1,26 @@
 import os
 import numpy as np
+from multiprocessing import Process, Queue
 from matplotlib import pyplot, cm, colors, colorbar
 
 from clas12monitor.util import cached_property, flame
 from clas12monitor.ui import QtCore, QtGui, FigureCanvas, Figure, \
     NavigationToolbar
+from clas12monitor.dc import DCComponents
+
+def fetch_component_status(output,input):
+    components = DCComponents()
+    components.run = input.get()
+    components.fetch_data()
+    output.put(components)
 
 class DCWireStack(QtGui.QStackedWidget):
     def __init__(self, parent=None):
         super(DCWireStack,self).__init__(parent)
+        self.qin = Queue()
+        self.qout = Queue()
+
+        self.run = 1
         self.components = None
 
         self.wiremap = DCWirePlot(self)
@@ -22,6 +34,30 @@ class DCWireStack(QtGui.QStackedWidget):
     def setCurrentIndex(self,sec):
         super(DCWireStack,self).setCurrentIndex(sec)
         self.update_active_plot()
+
+    @property
+    def components(self):
+        if not self.qout.empty():
+            comps = self.qout.get(False)
+            if comps is not None:
+                self._components = comps
+                print(self._components.crate_id)
+        return self._components
+
+    @components.setter
+    def components(self,comps):
+        self._components = comps
+
+    @property
+    def run(self):
+        return self._run
+
+    @run.setter
+    def run(self,r):
+        self._run = r
+        self.qin.put(self._run)
+        proc = Process(target=fetch_component_status, args=(self.qout,self.qin))
+        proc.start()
 
     @property
     def data(self):

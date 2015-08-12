@@ -1,6 +1,7 @@
-from . import tables, plots
+from . import tables
 from .components import DCComponents
 from .occupancy import dc_wire_occupancy
+from . import plots
 
 #from .sidebar import Sidebar
 
