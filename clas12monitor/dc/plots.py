@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from matplotlib import pyplot, cm, colors, colorbar
 
@@ -162,7 +163,7 @@ class DCWirePlot(QtGui.QWidget):
         self.txt = self.fig.text( 0.98, 0.98, '',
             ha = 'right',
             va = 'top',
-            bbox = dict(alpha=0.6, color='white'),
+            bbox = dict(alpha=0.5, color='white'),
             transform=self.fig.transFigure,
             family='monospace',
             zorder=100)
@@ -381,7 +382,9 @@ if __name__ == '__main__':
             cbox.setSpecialValueText('-')
             stack = DCWireStack()
 
-            stack.data = dc_wire_occupancy('exim1690.0001.recon')
+            infile = QtGui.QFileDialog.getOpenFileName(self,'open file',os.getcwd())
+
+            stack.data = dc_wire_occupancy(infile)
             stack.components = DCComponents()
             stack.components.run = 1
             stack.components.fetch_data()
