@@ -1,7 +1,12 @@
 import os
+from multiprocessing import Process
 
 from clas12monitor import dc
 from clas12monitor.ui import QtGui, uic
+
+def fetch_component_status(components, run=1):
+    components.run = run
+    components.fetch_data()
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
@@ -21,10 +26,13 @@ class MainWindow(QtGui.QMainWindow):
         self.show()
 
     def openDataFile(self):
-
         infile = QtGui.QFileDialog.getOpenFileName(self,'open file',os.getcwd())
-
         self.dc_wire_stack.data = dc.dc_wire_occupancy(infile)
+
+        self.dc_wire_stack.components = dc.DCComponents()
+        fetch_component_status(self.dc_wire_stack.components, 1)
+        #proc = Process(target=fetch_component_status, args=(self.dc_wire_stack.components, 1))
+        #proc.start()
 
     def openReferenceFile(self):
         pass
