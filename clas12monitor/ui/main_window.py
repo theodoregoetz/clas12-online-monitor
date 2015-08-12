@@ -21,7 +21,10 @@ class MainWindow(QtGui.QMainWindow):
         self.show()
 
     def openDataFile(self):
-        pass
+
+        infile = QtGui.QFileDialog.getOpenFileName(self,'open file',os.getcwd())
+
+        self.dc_wire_stack.data = dc.dc_wire_occupancy(infile)
 
     def openReferenceFile(self):
         pass
