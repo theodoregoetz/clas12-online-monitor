@@ -22,6 +22,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def openDataFile(self):
         pass
+
     def openReferenceFile(self):
         pass
 

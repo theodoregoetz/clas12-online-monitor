@@ -2,7 +2,7 @@ from . import tables, plots
 from .components import DCComponents
 from .occupancy import dc_wire_occupancy
 
-from .sidebar import Sidebar
+#from .sidebar import Sidebar
 
 from .crate_tab import CrateTab
 from .db_tab import DBTab
