@@ -5,6 +5,8 @@ import numpy as np
 java_started = False
 
 def start_java():
+    global java_started
+    java_started = True
     jvm_path = jpype.getDefaultJVMPath()
     curdir = os.path.dirname(os.path.realpath(__file__))
     jars = [os.path.join(curdir,'coat-libs-1.0-SNAPSHOT.jar')]
@@ -22,14 +24,12 @@ def start_java():
     java.lang.System.setErr(java.io.PrintStream(
         java.io.FileOutputStream('/dev/null')))
 
-    global jvm_started
-    jvm_started = True
-
 def shutdown_java():
     jpype.shutdownJVM()
 
 class EvioReader(object):
     def __init__(self,fname=None):
+        global java_started
         if not java_started:
             start_java()
 
