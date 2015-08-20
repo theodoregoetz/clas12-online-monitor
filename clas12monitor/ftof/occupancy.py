@@ -5,8 +5,8 @@ from clas12monitor.data import EvioReader
 def ftof_wire_occupancy(evio_source):
     ftofocc = np.zeros((6,60))
     for evt in EvioReader(evio_source):
-        ftofhits = evt['HitBasedTrkg::HBHits']
-        if dchits is not None:
+        ftofhits = evt['FTOFRec::rawhits']
+        if ftofhits is not None:
             hit_data = np.vstack([
                 ftofhits.sector    ,
                 ftofhits.panel_id,]).T - 1
