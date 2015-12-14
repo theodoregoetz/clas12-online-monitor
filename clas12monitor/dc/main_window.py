@@ -17,7 +17,7 @@ class MainWindow(QtGui.QMainWindow):
         self.loadRun(1)
         #self.dcwires.initialize_session()
 
-
+        # This part requires actual run data to be loaded
 
         #self.run_number.setValue(int(DCWires.runnum))
         #self.run_number.valueChanged.connect(self.run_number.show)
@@ -29,29 +29,32 @@ class MainWindow(QtGui.QMainWindow):
         ### Explorer Tabs
         self.explorer_tabs = QtGui.QTabWidget()
 
+        #Loading in the crate tab
         self.crate = CrateTab(self)
         self.crate.setMinimumWidth(750)
         self.crate.setMaximumHeight(1000)
         crate_vbox = QtGui.QVBoxLayout(self.crate)
         self.explorer_tabs.addTab(self.crate, 'Crates')
 
-
+        #Loading in the distribution board tab
         self.dboard = DBTab(self)
         self.dboard.setMinimumWidth(750)
         dboard_vbox = QtGui.QVBoxLayout(self.dboard)
         self.explorer_tabs.addTab(self.dboard, 'Distribution Boards')
 
-
+        #Loading in the translation board tab
         self.tboard = TBTab(self)
         self.tboard.setMinimumWidth(750)
         tboard_vbox = QtGui.QVBoxLayout(self.tboard)
         self.explorer_tabs.addTab(self.tboard, 'Translation Boards')
 
+        #Loading in the DC readout board tab
         self.dcrb = DCRB(self)
         self.dcrb.setMinimumWidth(750)
         dcrb_vbox = QtGui.QVBoxLayout(self.dcrb)
         self.explorer_tabs.addTab(self.dcrb, 'Drift Chamber Readout Board')
 
+        #Loading in the Signal Translation Board
         self.stb = STBTab(self)
         self.stb.setMinimumWidth(750)
         stb_vbox = QtGui.QVBoxLayout(self.stb)
