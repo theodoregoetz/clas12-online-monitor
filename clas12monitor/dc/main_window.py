@@ -84,10 +84,12 @@ class MainWindow(QtGui.QMainWindow):
         self.wiremap_holder.setLayout(wmap_vbox)
 
         def update_wiremap(sec,data):
+            #if loop allows this method to narrow in on a specific sector
             if sec is not None:
                 self.wiremaps.setCurrentIndex(sec+1)
             else:
                 self.wiremaps.setCurrentIndex(0)
+            #set the data passed in
             self.wiremaps.data = data
 
         #self.sidebar.post_update = update_wiremap
@@ -99,11 +101,13 @@ class MainWindow(QtGui.QMainWindow):
             if (i == 0):
                 self.wiremaps.setCurrentIndex(0)
             else:
+                #Making sure the wiremap corresponds to the chosen sector
                 self.wiremaps.setCurrentIndex(self.explorer_tabs.currentWidget().currentIndex() + 1)
-
+        #connect the explorer tab signal to this method
         self.explorer_tabs.currentChanged.connect(f)
 
 
+        #this method will send which ever component array is called on
         def changeViewTab():
             if self.explorer_tabs.currentIndex() == 0:
                 self.crate.sendCrateArray()
@@ -116,29 +120,32 @@ class MainWindow(QtGui.QMainWindow):
             if self.explorer_tabs.currentIndex() == 4:
                 self.stb.sendSTBArray()
 
-
+        #connect the explorere tab to this method
         self.explorer_tabs.currentChanged.connect(changeViewTab)
 
 
         self.setModeExplorer()
         self.show()
 
+    #Initialize explorer mode with default view of crate 1
     def setModeExplorer(self):
         self.actionExplorer.setChecked(True)
         self.actionChooser.setChecked(False)
         self.left_stacked_widget.setCurrentIndex(0)
         self.crate.sendCrateArray()
 
+    #switching over to the search query
     def setModeChooser(self):
         self.actionExplorer.setChecked(False)
         self.actionChooser.setChecked(True)
         self.left_stacked_widget.setCurrentIndex(1)
 
+    #this will set the actual run display number
     def setRunDialogue(self):
         run,ok = SetRunDialogue.getRunNum()
         if ok:
             self.loadRun(run)
-
+    #this is fetching the runnumber data from the given data base
     def loadRun(self, runnumber):
         self.rundisplay.setNum(runnumber)
         self.dcwires.run = runnumber
